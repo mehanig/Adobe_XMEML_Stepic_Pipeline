@@ -4,7 +4,7 @@ This repository presents commandline interface for generaning a lot of
 XML files in format available to import back to Adobe Premiere.
 
 Let's say your project inside Premiere have this structure:
-`
+```
 ├── 1___intro
 │   ├── Step2from26
 │   │   ├── Step2from26_Professor.TS
@@ -18,15 +18,15 @@ Let's say your project inside Premiere have this structure:
 │   ├── Step5from26
 │   │   ├── Step2from26_Professor.TS
 │   │   └── Step2from26_Screen.mp4
-`
+```
 
 First create Template sequence, inside any of Step_from_ folder, 
 than run script with parameters:
-`
+```
 python3 run.py (-template <path>) (-in <path>)  
-`
+```
 and it will genrate a lot of XML sequences, for structure like:
-`
+```
 ├── 1___intro
 │   ├── Step2from26
 │   │   ├── Step2from26_Professor.TS
@@ -44,7 +44,7 @@ and it will genrate a lot of XML sequences, for structure like:
 │   │   ├── Step5from26_Professor.TS
 │   │   ├── Step5from26_seq
 │   │   └── Step5from26_Screen.mp4
-`
+```
 
-just drag-and-drop them inside proper location inside Premiere and you are done.
+Just drag-and-drop them inside proper location inside Premiere and you are done.
 Now you only need to make color correction and audio adjustmens! No more montage!
