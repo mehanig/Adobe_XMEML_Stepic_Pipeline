@@ -1,4 +1,4 @@
-# Sequence Generator based on XMEML generated from Adobe Premiere CC 2014 #
+# Sequence Generator based on XMEML files generated from Adobe Premiere CC 2014 #
 
 This repository presents commandline interface for generaning a lot of
 XML files in format available to import back to Adobe Premiere.
