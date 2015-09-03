@@ -54,9 +54,6 @@ def generate_sequence_list(path, extra_path_lvl=0):
                 update_seq(sequences, root, f)
     return sequences
 
-# print_shift = 0
-# tab = '____'
-
 class BinNode(object):
 
     def __init__(self, node, name = None, parent = None ):
@@ -102,19 +99,9 @@ class BinNode(object):
             for n in children.childNodes:
                 if n.nodeName in PARSED_NAMES:
                     self._update_nodes_to_montage(n)                            
- #                   global print_shift
- #                   print_shift += 1
-                    
-#                    print(tab*print_shift, n.nodeName)
                     newChild = BinNode(n, parent=self)
-#                    print(print_shift * tab, 'parsing - >')
                     newChild.parse()
-#                    print(print_shift * tab, '< - parsing')
-#                    print_shift -= 1
                     self.children.append(n)
-                    
-                #                self.children.append(n)
-#                print(n, n.nodeName, n.getElementsByTagName('name')[0].parentNode.nodeName, n.tagName)
 
     def get_node_stat(self):
         print(len(self.children))
