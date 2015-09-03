@@ -58,7 +58,7 @@ class TestProjectStructure(unittest.TestCase):
                               'course_path': course_path}
     def tearDown(self):
         import shutil
-       # shutil.rmtree('testCoursePY')
+        shutil.rmtree('testCoursePY')
 
     def test_folder_structure_is_in_format(self):
         self.assertTrue(os.path.isdir("testCoursePY"))
@@ -67,5 +67,9 @@ class TestProjectStructure(unittest.TestCase):
         gs = generate_sequence_list('testCoursePY', extra_path_lvl = 1)
         self.assertEqual(self.sequence_list['course_path'], os.sep + gs['course_path'])
         self.assertEqual(self.sequence_list['seq'], gs['seq'])
+
+    def test_parse_course_bin_xml(self):
+        parse_course_bin_xml('tests/test_cases/Algo_2015.xml')
+
 if __name__ == '__main__':
     unittest.main()
