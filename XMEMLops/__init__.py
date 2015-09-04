@@ -5,6 +5,7 @@ import sys
 import re
 from copy import deepcopy
 import xml.dom.minidom as dom
+from xml.dom.minidom import parseString
 from xml.etree import ElementTree
 
 DEFAULT_PROJECT_STRUTURE = { }
@@ -26,6 +27,11 @@ def openXMLSeqTemplate(path):
 def validate_folder(path):
     pass
 
+# generate data dict about course, finds lessons, course full path and steps
+# key 'seq' contains another dictionary with keys - relative lesson paths from course path, 
+# and values - list of step files
+# First part with sys.args needed to split unnecessary parts of path, so we can run script
+# from any folder "pyton3 Path/To/This/run.py CoursePath"
 def generate_sequence_list(path, extra_path_lvl=0):
     path = os.path.normpath(path)
     base_path = os.path.dirname(os.path.abspath(__file__))
@@ -54,6 +60,7 @@ def generate_sequence_list(path, extra_path_lvl=0):
                 update_seq(sequences, root, f)
     return sequences
 
+# Main class for all nodes operation, based on assumption that project contains Bins.
 class BinNode(object):
 
     def __init__(self, node, name = None, parent = None ):
@@ -63,12 +70,13 @@ class BinNode(object):
         self.main = node
         self.children = []
         self.to_montage = []
-
+        self.seqTemplate = (node.getElementsByTagName('sequence') or [None])[0] 
+        
+    # Recurcively updates nodes and parent nodes with to_montage information so every node
+    # contain exact list of video substeps
     @staticmethod
     def _update_self_and_parents_with_montage(node, add_to_montage):
         if hasattr(node, 'parent') and node.parent:
-            print('ADDING', add_to_montage)
-            print(node.to_montage)
             BinNode._update_self_and_parents_with_montage(node.parent, add_to_montage)
 
         def make_unique(seq):
@@ -79,6 +87,8 @@ class BinNode(object):
         node.to_montage.append(add_to_montage)
         node.to_montage = make_unique(node.to_montage)
         
+
+    # Finds only nodes with name node and value of substep naming pattern
     def _update_nodes_to_montage(self, add_node):
         for cn in add_node.childNodes:
             m = None
@@ -87,8 +97,8 @@ class BinNode(object):
             except AttributeError:
                 pass
             if cn.nodeName == 'name' and m: 
-                print(m.group(0), cn.firstChild.nodeValue)
                 BinNode._update_self_and_parents_with_montage(self, add_node)
+
 
     def parse(self):
         c = self.main.getElementsByTagName('children')
@@ -103,18 +113,53 @@ class BinNode(object):
                     newChild.parse()
                     self.children.append(n)
 
+
+    def _uniquifiy_node(node, prefs):
+        pass
+
+
+    # Attach new seq nodes inside children of first bin and updates their data
+    def montage(self):
+
+        last_seq_id = int(self.seqTemplate.attributes['id'].value.split('-')[-1])
+        main_bin = self.main.getElementsByTagName('bin')[0].getElementsByTagName('children')[0]
+        for node in self.to_montage:
+            last_seq_id += 1
+            new_Seq = self.seqTemplate.cloneNode(deep=True)
+            new_Seq.setAttribute('id', 'sequence-' + str(last_seq_id))
+            main_bin.appendChild(new_Seq)
+
+    
+    # Workaround to delete emply lines after minidom.toprettyxml
+    # Supports only UTF-8
+    def write_to_file(self, path = None):
+        
+        def _new_prettify(content):
+            reparsed = parseString(content)
+            return('\n'.join([line for line in reparsed.toprettyxml(indent=' '*2).split('\n') if line.strip()]))
+
+        name = str(self.name) + NEW_FILE_POSTFIX 
+        with open(name, 'w') as target:
+            target.write(_new_prettify(self.main.toprettyxml()))
+
+
     def get_node_stat(self):
         print(len(self.children))
         print(len(self.to_montage))
         print(len(set(self.to_montage)))
     
+
 def parse_course_bin_xml(xml_path):
     xml_course = dom.parse(xml_path)
     MainBin = BinNode(xml_course)
     MainBin.parse()
     print("FINAL!")
     MainBin.get_node_stat()
+    MainBin.montage()
+    MainBin.write_to_file()
 
+# Based on sequence template, generate a lot of sequences with files from anothers steps
+# Useless while this approach not reuse project files with linking inside project
 def generate_template_from_list(tmplt, op_list, seqName = None):
     
     dom_f = dom.parse(tmplt)
@@ -154,5 +199,5 @@ def generate_template_from_list(tmplt, op_list, seqName = None):
 if __name__ == '__main__':
     x = generate_sequence_list('Algo2015Course')
     generate_template_from_list('example_media.xml', x)
-    parse_course_bin_xml('Algo_2015_vSmal.xml')
+    parse_course_bin_xml('Algo_2015.xml')
     #print("X:", x)
