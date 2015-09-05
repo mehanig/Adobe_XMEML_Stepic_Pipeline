@@ -14,7 +14,7 @@ DEFAULT_SUBSTEP_FILES_PATTERN = r'^Step(?P<substep_id>[0-9]+)from(?P<step_id>[0-
 NAME_REPLACEMENT_LIST = ['file', 'clipitem', 'sequence']
 PARSED_NAMES = ['bin', 'clip', 'sequence']
 POSTFIX_PROF = "_Professor.TS"
-POSTFIX_SCREEN = "_Screen.mkv"
+POSTFIX_SCREEN = "_Screen.mp4"
 FILE_PATHURL_START = 'file:/'
 NEW_FILE_POSTFIX = '_new.xml'
 
@@ -63,15 +63,18 @@ def generate_sequence_list(path, extra_path_lvl=0):
 # Main class for all nodes operation, based on assumption that project contains Bins.
 class BinNode(object):
 
-    def __init__(self, node, name = None, parent = None ):
+    def __init__(self, node, name = None, parent = None, mainNode = False ):
         if not name:
             self.name = node.nodeName
         self.parent = parent
         self.main = node
         self.children = []
         self.to_montage = []
-        self.seqTemplate = (node.getElementsByTagName('sequence') or [None])[0] 
-        
+        self.seqTemplate = (node.getElementsByTagName('sequence') or [None])[0]
+        self.file_links = {}
+        if mainNode:
+            self.create_file_links()
+
     # Recurcively updates nodes and parent nodes with to_montage information so every node
     # contain exact list of video substeps
     @staticmethod
@@ -91,14 +94,22 @@ class BinNode(object):
     # Finds only nodes with name node and value of substep naming pattern
     def _update_nodes_to_montage(self, add_node):
         for cn in add_node.childNodes:
-            m = None
             try:
-                m = re.search(DEFAULT_SUBSTEP_FILES_PATTERN, cn.firstChild.nodeValue)
+                nodeValue = cn.firstChild.nodeValue
             except AttributeError:
-                pass
+                continue
+            m = re.search(DEFAULT_SUBSTEP_FILES_PATTERN, cn.firstChild.nodeValue)
             if cn.nodeName == 'name' and m: 
                 BinNode._update_self_and_parents_with_montage(self, add_node)
 
+    def create_file_links(self):
+        for n in self.main.getElementsByTagName('pathurl'):
+            print('YO')
+            #print(n.parentNode.toprettyxml())
+            name = n.parentNode.getElementsByTagName('name')[0].firstChild.nodeValue
+            print(name)
+            file_id = n.parentNode.attributes['id'].value
+            self.file_links.update( {name : file_id})
 
     def parse(self):
         c = self.main.getElementsByTagName('children')
@@ -114,9 +125,31 @@ class BinNode(object):
                     self.children.append(n)
 
 
-    def _uniquifiy_node(node, prefs):
-        pass
+    # replaces ScreenCast and Video with appropriate version from file_links
+    def _uniquify_node_with_linked_files(self, node, linked_node_name):
 
+        def get_screen_and_video_dict(linked_node_name):
+            name_start = linked_node_name.split('_')[0]
+            files_pair_dict = {}
+            for key,value in self.file_links.items():
+                if (str(key)).startswith(name_start):
+                    if str(key).endswith(POSTFIX_PROF):
+                        files_pair_dict.update({'video':[key, value]})
+                    elif str(key).endswith(POSTFIX_SCREEN):
+                        files_pair_dict.update({'screen': [key,value]})
+            return files_pair_dict
+
+        ops = get_screen_and_video_dict(linked_node_name)
+        print(ops)
+        node.getElementsByTagName('name')[0].firstChild.nodeValue = linked_node_name + '_COMP'
+        for ci in node.getElementsByTagName('clipitem'):
+            clip_type = 'video'
+            if ci.getElementsByTagName('name')[0].firstChild.nodeValue.endswith(POSTFIX_SCREEN):
+                clip_type = 'screen'
+            for el in ci.getElementsByTagName('file'):
+                print(el.attributes['id'].value)
+                el.setAttribute('id', ops[clip_type][1])
+                print('Replaced with ',el.attributes['id'].value)
 
     # Attach new seq nodes inside children of first bin and updates their data
     def montage(self):
@@ -125,8 +158,12 @@ class BinNode(object):
         main_bin = self.main.getElementsByTagName('bin')[0].getElementsByTagName('children')[0]
         for node in self.to_montage:
             last_seq_id += 1
+            linked_file_id = node.getElementsByTagName('file')[0].attributes['id'].value
+            linked_node_name = node.getElementsByTagName('name')[0].firstChild.nodeValue
+            print('node name:', linked_node_name)
             new_Seq = self.seqTemplate.cloneNode(deep=True)
             new_Seq.setAttribute('id', 'sequence-' + str(last_seq_id))
+            self._uniquify_node_with_linked_files(new_Seq, linked_node_name )
             main_bin.appendChild(new_Seq)
 
     
@@ -147,11 +184,12 @@ class BinNode(object):
         print(len(self.children))
         print(len(self.to_montage))
         print(len(set(self.to_montage)))
+        print(self.file_links)
     
 
 def parse_course_bin_xml(xml_path):
     xml_course = dom.parse(xml_path)
-    MainBin = BinNode(xml_course)
+    MainBin = BinNode(xml_course, mainNode = True)
     MainBin.parse()
     print("FINAL!")
     MainBin.get_node_stat()
@@ -197,7 +235,7 @@ def generate_template_from_list(tmplt, op_list, seqName = None):
 
 
 if __name__ == '__main__':
-    x = generate_sequence_list('Algo2015Course')
-    generate_template_from_list('example_media.xml', x)
-    parse_course_bin_xml('Algo_2015.xml')
+    #x = generate_sequence_list('Algo2015Course')
+    #generate_template_from_list('example_media.xml', x)
+    parse_course_bin_xml('Algo_tests.xml')
     #print("X:", x)
