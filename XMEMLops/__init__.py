@@ -92,19 +92,22 @@ class BinNode(object):
         
 
     # Finds only nodes with name node and value of substep naming pattern
+    # To avoid duplicates we only add half of nodes to montage (thouse which are not Screencasts)
     def _update_nodes_to_montage(self, add_node):
         for cn in add_node.childNodes:
+            # We go through all nodes, which isn't optimal solution
+            # Can be rewritten
             try:
                 nodeValue = cn.firstChild.nodeValue
             except AttributeError:
                 continue
             m = re.search(DEFAULT_SUBSTEP_FILES_PATTERN, cn.firstChild.nodeValue)
-            if cn.nodeName == 'name' and m: 
-                BinNode._update_self_and_parents_with_montage(self, add_node)
+            if cn.nodeName == 'name' and m:
+                if cn.firstChild.nodeValue.endswith(POSTFIX_SCREEN):
+                    BinNode._update_self_and_parents_with_montage(self, add_node)
 
     def create_file_links(self):
         for n in self.main.getElementsByTagName('pathurl'):
-            print('YO')
             #print(n.parentNode.toprettyxml())
             name = n.parentNode.getElementsByTagName('name')[0].firstChild.nodeValue
             print(name)
@@ -126,6 +129,9 @@ class BinNode(object):
 
 
     # replaces ScreenCast and Video with appropriate version from file_links
+    # Uniquify = replace <file id=...> and <masterclipid>...</> with apropriate values
+    # integer !usually! is equal , file-33 is from masterclip-33 and so on
+    
     def _uniquify_node_with_linked_files(self, node, linked_node_name):
 
         def get_screen_and_video_dict(linked_node_name):
@@ -150,6 +156,9 @@ class BinNode(object):
                 print(el.attributes['id'].value)
                 el.setAttribute('id', ops[clip_type][1])
                 print('Replaced with ',el.attributes['id'].value)
+                # go find parent which is <clipitem> and change it's id based on assumption that integers are same
+#                el.parentNode.setAttribute('id','clipitem-' + el.attributes['id'].value.split('-')[-1])
+                el.parentNode.getElementsByTagName('masterclipid')[0].firstChild.nodeValue = 'masterclip-' + el.attributes['id'].value.split('-')[-1]
 
     # Attach new seq nodes inside children of first bin and updates their data
     def montage(self):
