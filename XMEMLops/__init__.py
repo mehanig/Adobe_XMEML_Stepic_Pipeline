@@ -107,7 +107,6 @@ def add_clip_to_end(seq1, seq2):
             end_max = int(n.firstChild.nodeValue)
 
     for ch in _delete_text_nodes(seq2.getElementsByTagName('media')[0].childNodes):
-        print('appending', ch.getElementsByTagName('name')[0].firstChild.nodeValue)
         # TODO is new_ch needed??
         new_ch = dom.parseString(_new_prettify(ch.toprettyxml())).documentElement
         seq1.getElementsByTagName('media')[0].appendChild(new_ch)
@@ -249,10 +248,8 @@ class BinNode(object):
     # Creates one sequence for 1 step folder based on subsptep_id 
     def montage_by_steps(self):
     
-        def _getId(_tuple):
-            return _tuple[0]
-
         self.montage_by_one()
+
         substeps = defaultdict(dict)
         for n in self.main.getElementsByTagName('sequence'):
             name = n.getElementsByTagName('name')[0].firstChild.nodeValue
@@ -264,9 +261,11 @@ class BinNode(object):
     
         for index, substep_list in substeps.items():
             if len(substep_list.keys()) > 1:
-                print(substep_list)
-                for key in sorted(substep_list):
-                    add_clip_to_end(substep_list[key], substep_list[key])
+                print(substep_list.keys())
+                _sorted = sorted(substep_list)
+                first, others = (_sorted[0], _sorted[1:])
+                for key in others:
+                    add_clip_to_end(substep_list[first], substep_list[key])
     # Workaround to delete emply lines after minidom.toprettyxml
     # Supports only UTF-8
 
