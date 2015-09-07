@@ -253,23 +253,23 @@ class BinNode(object):
             return _tuple[0]
 
         self.montage_by_one()
-        steps = defaultdict(list)
+        substeps = defaultdict(dict)
         for n in self.main.getElementsByTagName('sequence'):
             name = n.getElementsByTagName('name')[0].firstChild.nodeValue
             m = re.search(DEFAULT_SUBSTEP_NAME_PATTERN, name)
             if m:
                 step_id = int(m.group('step_id'))
                 substep_id = int(m.group('substep_id'))
-                print('IMAPPENDING', step_id, [substep_id,n])
-                steps[step_id].append([substep_id,n])
+                print('IMAPPENDING', step_id, substep_id, n )
+                substeps[step_id].update({substep_id :n })
     
-        for index, step_list in steps.items():
-            if len(step_list) > 1:
+        for index, substep_list in substeps.items():
+            if len(substep_list.keys()) > 1:
                 print(index)
-                print(sorted(step_list, key = _getId))
-                for step in sorted(step_list, key = _getId)[1:]:
-                    print('ADDIND',step)
-                    add_clip_to_end(step_list[1][1], step[1])
+                print(sorted(substep_list.keys())
+                for key in sorted(substep_list.keys()):
+                    print('ADDIND',substep_list[key])
+                    add_clip_to_end(substep_list[key], substep_list[key])
     # Workaround to delete emply lines after minidom.toprettyxml
     # Supports only UTF-8
 
