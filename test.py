@@ -71,5 +71,15 @@ class TestProjectStructure(unittest.TestCase):
     def test_parse_course_bin_xml(self):
         parse_course_bin_xml('tests/test_cases/Algo_2015.xml')
 
+
+    #No idea how to implement it(
+    def test_Bin_object(self)
+        pass
+    
+    
+    def test_ffmpeg_duration_calculations(self):
+        pass
+
+
 if __name__ == '__main__':
     unittest.main()
