@@ -260,15 +260,12 @@ class BinNode(object):
             if m:
                 step_id = int(m.group('step_id'))
                 substep_id = int(m.group('substep_id'))
-                print('IMAPPENDING', step_id, substep_id, n )
                 substeps[step_id].update({substep_id :n })
     
         for index, substep_list in substeps.items():
             if len(substep_list.keys()) > 1:
-                print(index)
-                print(sorted(substep_list.keys())
-                for key in sorted(substep_list.keys()):
-                    print('ADDIND',substep_list[key])
+                print(substep_list)
+                for key in sorted(substep_list):
                     add_clip_to_end(substep_list[key], substep_list[key])
     # Workaround to delete emply lines after minidom.toprettyxml
     # Supports only UTF-8
