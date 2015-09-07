@@ -4,6 +4,7 @@ import os
 import sys
 import re
 import subprocess
+from collections import defaultdict
 from copy import deepcopy
 import xml.dom.minidom as dom
 from xml.dom.minidom import parseString
@@ -245,30 +246,32 @@ class BinNode(object):
             self._uniquify_node_with_linked_files(new_Seq, linked_node_name )
             main_bin.appendChild(new_Seq)
 
-
-
     # Creates one sequence for 1 step folder based on subsptep_id 
     def montage_by_steps(self):
-        
+    
+        def _getId(_tuple):
+            return _tuple[0]
+
         self.montage_by_one()
-        steps = {}
+        steps = defaultdict(list)
         for n in self.main.getElementsByTagName('sequence'):
             name = n.getElementsByTagName('name')[0].firstChild.nodeValue
             m = re.search(DEFAULT_SUBSTEP_NAME_PATTERN, name)
             if m:
-                # TODO: Can be rewritten!
                 step_id = int(m.group('step_id'))
                 substep_id = int(m.group('substep_id'))
-                if steps.get(step_id):
-                    steps[step_id].add(substep_id,n)
-                else:
-                    steps[step_id] = StepMontageStruct(substep_id, n)
-        for index, step in steps.items():
-            if len(step.montage) == 1:
-                continue
-            else:
-                for i in range(2,len(step.montage)):
-                    add_clip_to_end(step.montage[1][1], step.montage[i][1])
+                print('IMAPPENDING', step_id, [substep_id,n])
+                steps[step_id].append([substep_id,n])
+    
+        for index, step_list in steps.items():
+            if len(step_list) > 1:
+                print(index)
+                print(sorted(step_list, key = _getId))
+                for step in sorted(step_list, key = _getId)[1:]:
+                    print('ADDIND',step)
+                    add_clip_to_end(step_list[1][1], step[1])
+    # Workaround to delete emply lines after minidom.toprettyxml
+    # Supports only UTF-8
 
     # Workaround to delete emply lines after minidom.toprettyxml
     # Supports only UTF-8
