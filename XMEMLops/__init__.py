@@ -257,7 +257,7 @@ class BinNode(object):
             if m:
                 step_id = int(m.group('step_id'))
                 substep_id = int(m.group('substep_id'))
-                substeps[step_id].update({substep_id :n })
+                substeps[step_id][substep_id] = n
     
         for index, substep_list in substeps.items():
             if len(substep_list.keys()) > 1:
@@ -283,19 +283,6 @@ class BinNode(object):
         print(len(self.to_montage))
         print(len(set(self.to_montage)))
         print(self.file_links)
-
-
-class StepMontageStruct(object):
-    
-    def __init__(self, id, seqnode):
-        self.montage = [(id,seqnode)]
-
-    def _getId(self, _tuple):
-        return _tuple[0]
-
-    def add(self, id,seqnode):
-        self.montage.append((id,seqnode))
-        self.montage = sorted(self.montage, key = self._getId)
 
 def parse_course_bin_xml(xml_path):
     xml_course = dom.parse(xml_path)
@@ -347,5 +334,5 @@ def generate_template_from_list(tmplt, op_list, seqName = None):
 if __name__ == '__main__':
     #x = generate_sequence_list('Algo2015Course')
     #generate_template_from_list('example_media.xml', x)
-    parse_course_bin_xml('Algo_tests.xml')
+    parse_course_bin_xml('Algo_2015_w2.xml')
     #print("X:", x)
