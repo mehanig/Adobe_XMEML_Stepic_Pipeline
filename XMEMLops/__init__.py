@@ -98,18 +98,41 @@ def _new_prettify(content):
     return('\n'.join([line for line in reparsed.toprettyxml(indent=' '*2).split('\n') if line.strip()]))
 
 
+def shift_node_time(seq, ticks):
+    for node in seq.getElementsByTagName('clipitem'):
+        for el in node.getElementsByTagName('end'):
+            el.firstChild.nodeValue = int(el.firstChild.nodeValue) + ticks
+#        for el in node.getElementsByTagName('out'):
+#            el.firstChild.nodeValue = int(el.firstChild.nodeValue) + ticks
+#        for el in node.getElementsByTagName('in'):
+#            el.firstChild.nodeValue = int(el.firstChild.nodeValue) + ticks
+        for el in node.getElementsByTagName('start'):
+            el.firstChild.nodeValue = int(el.firstChild.nodeValue) + ticks
+
+
+        
 # TODO: rewrite as class method?
-#Add clipnodes from seq2 <media> to end of seq1 media
+#Add <clipitems> from seq2 <media> to appropriate <tracks>
 def add_clip_to_end(seq1, seq2):
     end_max = 0
     for n in seq1.getElementsByTagName('end'):
         if end_max < int(n.firstChild.nodeValue):
             end_max = int(n.firstChild.nodeValue)
 
-    for ch in _delete_text_nodes(seq2.getElementsByTagName('media')[0].childNodes):
-        # TODO is new_ch needed??
-        new_ch = dom.parseString(_new_prettify(ch.toprettyxml())).documentElement
-        seq1.getElementsByTagName('media')[0].appendChild(new_ch)
+    shift_node_time(seq2, end_max)
+    seq1_tracks = seq1.getElementsByTagName('track')
+    seq2_tracks = seq2.getElementsByTagName('track')
+
+    for e1, e2 in zip(seq1_tracks, seq2_tracks):
+        for citem in e2.getElementsByTagName('clipitem'):
+            new_citem = dom.parseString(_new_prettify(citem.toprettyxml())).documentElement
+            e1.appendChild(new_citem)
+
+#    for ch in _delete_text_nodes(seq2.getElementsByTagName('media')[0].childNodes):
+#        # TODO is new_ch needed??
+#        print("CH!!")
+#        new_ch = dom.parseString(_new_prettify(ch.toprettyxml())).documentElement
+#        seq1.getElementsByTagName('media')[0].appendChild(new_ch)
 
 #    for ch in _delete_text_nodes(seq2.getElementsByTagName('track')):
 
@@ -266,8 +289,6 @@ class BinNode(object):
                 first, others = (_sorted[0], _sorted[1:])
                 for key in others:
                     add_clip_to_end(substep_list[first], substep_list[key])
-    # Workaround to delete emply lines after minidom.toprettyxml
-    # Supports only UTF-8
 
     # Workaround to delete emply lines after minidom.toprettyxml
     # Supports only UTF-8
