@@ -1,3 +1,13 @@
-DEFAULT_PROJECT_STRUTURE = { }
+DEFAULT_PROJECT_STRUTURE = {}
 DEFAULT_SUBSTEP_NAME_PATTERN = r'^Step(?P<substep_id>[0-9]+)from(?P<step_id>[0-9]+)'
-
+DEFAULT_SUBSTEP_FILES_PATTERN = r'^Step(?P<substep_id>[0-9]+)from(?P<step_id>[0-9]+)_(?P<postfix>Professor|Screen).'
+NAME_REPLACEMENT_LIST = ['file', 'clipitem', 'sequence']
+PARSED_NAMES = ['bin', 'clip', 'sequence']
+POSTFIX_PROF = "_Professor.mp4"
+POSTFIX_SCREEN = "_Screen.mp4"
+FILE_PATHURL_START = 'file:/'
+NEW_FILE_POSTFIX = '_new.xml'
+FFPROBE_RUN_PATH = 'ffprobe'
+DUMBPREFIX = 'file://localhost'
+PROJECT_TIMEBASE = 25
+TEXT_NODE = 3
